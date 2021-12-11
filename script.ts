@@ -3,17 +3,9 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const result = await prisma.post.update({
-    data: {
-      author: {
-        connect: {
-          id: 1
-        }
-      }
-    },
-    where: {
-      id: 1
-    }
+  const result = await prisma.user.findMany({
+    skip: 2,
+    take: 2
   });
 
   console.log(result);
