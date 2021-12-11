@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+import { Post, User } from '.prisma/client';
 import { ApolloServer } from 'apollo-server';
 import { DateTimeResolver } from 'graphql-scalars';
 import { Context, context } from './context';
@@ -36,53 +38,110 @@ scalar DateTime
 
 const resolvers = {
   Query: {
-    allUsers: (_parent, _args, context: Context) => {
-      // TODO
+    allUsers: (_parent: any, _args: any, context: Context) => {
+      return context.prisma.user.findMany({});
     },
-    postById: (_parent, args: { id: number }, context: Context) => {
-      // TODO
+    postById: (_parent: any, _args: { id: number }, context: Context) => {
+      return context.prisma.post.findUnique({
+        where: {
+          id: _args.id
+        }
+      });
     },
     feed: (
-      _parent,
-      args: {
+      _parent: any,
+      _args: {
         searchString: string | undefined;
         skip: number | undefined;
         take: number | undefined;
       },
       context: Context
     ) => {
-      // TODO
+      const or = _args.searchString
+        ? {
+          OR: [
+            { title: { contains: _args.searchString as string } },
+            { content: { contains: _args.searchString as string } }
+          ]
+        }
+        : {};
+
+      return context.prisma.post.findMany({
+        where: {
+          published: true,
+          ...or
+        },
+        skip: Number(_args.skip) || undefined,
+        take: Number(_args.take) || undefined
+      });
     },
-    draftsByUser: (_parent, args: { id: number }, context: Context) => {
-      // TODO
+    draftsByUser: (_parent: any, _args: { id: number }, context: Context) => {
+      return context.prisma.user.findUnique({
+        where: {
+          id: _args.id,
+        }
+      }).posts({
+        where: {
+          published: false
+        }
+      });
+      
     }
   },
   Mutation: {
-    signupUser: (_parent, args: { name: string | undefined; email: string }, context: Context) => {
-      // TODO
+    signupUser: (_parent: any, _args: { name: string | undefined; email: string }, context: Context) => {
+      return context.prisma.user.create({
+        data: {
+          email: _args.name as string,
+          name: _args.email
+        }
+      });
     },
     createDraft: (
-      _parent,
-      args: { title: string; content: string | undefined; authorEmail: string },
+      _parent: any,
+      _args: { title: string; content: string | undefined; authorEmail: string },
       context: Context
     ) => {
+      return context.prisma.post.create({
+        data: {
+          title: _args.title,
+          content: _args.content,
+          author: {
+            connect: {
+              email: _args.authorEmail
+            }
+          }
+        }
+      });
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    incrementPostViewCount: (_parent: any, _args: { id: number }, context: Context) => {
       // TODO
     },
-    incrementPostViewCount: (_parent, args: { id: number }, context: Context) => {
-      // TODO
-    },
-    deletePost: (_parent, args: { id: number }, context: Context) => {
-      // TODO
+    deletePost: (_parent: any, _args: { id: number }, context: Context) => {
+      return context.prisma.post.delete({
+        where: { 
+          id: _args.id
+        }
+      });
     }
   },
   Post: {
-    author: (parent, _args, context: Context) => {
-      return null;
+    author: (parent: Post, _args: any, context: Context) => {
+      return context.prisma.user.findUnique({
+        where: {
+          id: Number(parent.authorId)
+        }
+      });
     }
   },
   User: {
-    posts: (parent, _args, context: Context) => {
-      return [];
+    posts: (parent: User, _args: any, context: Context) => {
+      return context.prisma.post.findMany({
+        where: {
+          authorId: parent.id
+        }
+      });
     }
   },
   DateTime: DateTimeResolver
