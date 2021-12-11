@@ -2,14 +2,17 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// A `main` function so that you can use async/await
 async function main() {
-  const result = await prisma.user.update({
+  const result = await prisma.post.update({
     data: {
-      name: 'Ronaldo Stopa ED'
+      author: {
+        connect: {
+          id: 1
+        }
+      }
     },
     where: {
-      id: 5
+      id: 1
     }
   });
 
