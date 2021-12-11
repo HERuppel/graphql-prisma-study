@@ -38,4 +38,4 @@ GET http://localhost:3000/post/1
 
 ###
 
-GET http://localhost:3000/feed
+GET http://localhost:3000/feed?searchString=https
